@@ -1,0 +1,211 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int masv;
+    char ten[30];
+    float diem;
+} Data;
+
+typedef struct Node {
+    Data infor;
+    struct Node *next;
+} Node;
+
+typedef struct {
+    Node *head;
+    Node *tail;
+} LList;
+
+void initList(LList *L) {
+    L->head = L->tail = NULL;
+}
+
+Node *makeNode(Data x) {
+    Node *p = (Node*)malloc(sizeof(Node));
+    if (p == NULL) return NULL;
+    p->infor = x;
+    p->next = NULL;
+    return p;
+}
+
+void nhap(Data *x) {
+    printf("Ma SV (>0): ");
+    scanf("%d", &x->masv);
+    printf("Ten (khong dau cach): ");
+    scanf("%s", x->ten);
+    printf("Diem: ");
+    scanf("%f", &x->diem);
+}
+
+void in(Data x) {
+    printf("MaSV: %d | Ten: %s | Diem: %.2f\n", x.masv, x.ten, x.diem);
+}
+
+void insert_Head(LList *L, Data x) {
+    Node *p = makeNode(x);
+    if (p == NULL) return;
+    if (L->head == NULL) L->head = L->tail = p;
+    else {
+        p->next = L->head;
+        L->head = p;
+    }
+}
+
+void insert_Tail(LList *L, Data x) {
+    Node *p = makeNode(x);
+    if (p == NULL) return;
+    if (L->head == NULL) L->head = L->tail = p;
+    else {
+        L->tail->next = p;
+        L->tail = p;
+    }
+}
+
+Node *search(LList L, char *name) {
+    Node *p = L.head;
+    while (p != NULL && strcmp(p->infor.ten, name) != 0)
+        p = p->next;
+    return p;
+}
+
+/* Chen x vao sau nut co ten = name. Tra ve 1 neu thanh cong, 0 neu khong tim thay */
+int insert_After(LList *L, char *name, Data x) {
+    Node *q = search(*L, name);
+    if (q == NULL) return 0;
+    Node *p = makeNode(x);
+    if (p == NULL) return 0;
+    p->next = q->next;
+    q->next = p;
+    if (q == L->tail) L->tail = p;   
+    return 1;
+}
+
+void del_K(LList *L, char *name) {
+    Node *p = L->head, *prev = NULL;
+    while (p != NULL && strcmp(p->infor.ten, name) != 0) {
+        prev = p;
+        p = p->next;
+    }
+    if (p == NULL) {
+        printf("Khong tim thay %s de xoa\n", name);
+        return;
+    }
+    if (prev == NULL) L->head = p->next;      
+    else prev->next = p->next;
+    if (p == L->tail) L->tail = prev;         
+    free(p);
+    printf("Da xoa %s\n", name);
+}
+
+void processList(LList L) {
+    if (L.head == NULL) {
+        printf("Danh sach rong\n");
+        return;
+    }
+    for (Node *p = L.head; p != NULL; p = p->next)
+        in(p->infor);
+}
+
+void freeList(LList *L) {
+    Node *p;
+    while (L->head != NULL) {
+        p = L->head;
+        L->head = p->next;
+        free(p);
+    }
+    L->tail = NULL;
+}
+
+int main() {
+    LList L;
+    int kt = 0;
+    Data x;
+    char name[30];
+    Node *kq;
+    initList(&L);
+
+    do {
+        printf("\nChuong trinh lam viec voi DSLK don SV\n");
+        printf("\n1: Them nut vao dau danh sach");
+        printf("\n2: Them nut vao cuoi danh sach");
+        printf("\n3: Them nut vao sau mot nut khac trong danh sach");
+        printf("\n4: Xoa nut theo ten");
+        printf("\n5: Tim theo ten");
+        printf("\n6: Sua thong tin");
+        printf("\n9: Duyet ds");
+        printf("\n0: Thoat");
+        printf("\nMoi ban chon: ");
+        int chon;
+        scanf("%d", &chon);
+
+        switch (chon) {
+            case 1:
+                printf("Nhap thong tin sv can them\n");
+                nhap(&x);
+                if (x.masv > 0) insert_Head(&L, x);
+                break;
+
+            case 2:
+                printf("Nhap thong tin sv can them\n");
+                nhap(&x);
+                if (x.masv > 0) insert_Tail(&L, x);
+                break;
+
+            case 3:
+                printf("Them sau sinh vien nao? ");
+                scanf("%s", name);
+                if (search(L, name) == NULL) {
+                    printf("Khong co nguoi nay trong danh sach\n");
+                } else {
+                    printf("Nhap thong tin sv can them\n");
+                    nhap(&x);
+                    if (x.masv > 0) insert_After(&L, name, x);
+                }
+                break;
+
+            case 4:
+                printf("Ban muon xoa ai? ");
+                scanf("%s", name);
+                del_K(&L, name);
+                break;
+
+            case 5:
+                printf("Ban muon tim ai? ");
+                scanf("%s", name);
+                kq = search(L, name);
+                if (kq == NULL) printf("Khong co nguoi can tim\n");
+                else in(kq->infor);
+                break;
+
+            case 6:
+                printf("Ban muon sua ai? ");
+                scanf("%s", name);
+                kq = search(L, name);
+                if (kq == NULL) {
+                    printf("Khong co nguoi can sua\n");
+                } else {
+                    printf("Nhap thong tin moi cua sv\n");
+                    nhap(&x);
+                    kq->infor = x;
+                }
+                break;
+
+            case 9:
+                processList(L);
+                break;
+
+            case 0:
+                printf("Bye bye\n");
+                kt = 1;
+                break;
+
+            default:
+                printf("Lua chon khong hop le\n");
+        }
+    } while (kt == 0);
+
+    freeList(&L);   
+    return 0;
+}
